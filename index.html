@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 Interactive VA Calculator</title>
+    <style>
+        /* General Styling */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f0f2f5; color: #333; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #1a73e8; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #666; font-size: 0.9em; margin-bottom: 25px; }
+
+        /* Step Headers */
+        .step-label { font-weight: bold; margin-bottom: 10px; display: block; color: #444; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
+
+        /* Grid for Body Parts */
+        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .grid-full { grid-column: span 2; }
+        
+        /* Buttons */
+        .btn { padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; background: white; cursor: pointer; font-size: 1rem; transition: all 0.2s; font-weight: 500; color: #555; }
+        .btn:hover { background: #f9f9f9; border-color: #ccc; }
+        
+        /* Active State (Selected) */
+        .btn.selected { background: #e8f0fe; border-color: #1a73e8; color: #1a73e8; font-weight: bold; }
+        
+        /* Percentage Grid */
+        .percent-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
+        .btn-percent { padding: 10px 0; text-align: center; font-size: 0.9rem; }
+
+        /* Add Button */
+        .btn-add { width: 100%; background: #1a73e8; color: white; border: none; padding: 15px; font-size: 1.1rem; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 30px; }
+        .btn-add:hover { background: #1557b0; }
+        .btn-add:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Disability List */
+        .list-container { background: #f8f9fa; border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid #eee; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e0e0e0; }
+        .list-item:last-child { border-bottom: none; }
+        .delete-btn { color: #d93025; cursor: pointer; font-size: 1.2rem; padding: 0 10px; }
+
+        /* Results Section */
+        .result-box { background: #e8f0fe; border-radius: 8px; padding: 20px; text-align: center; border: 1px solid #d2e3fc; }
+        .big-rate { font-size: 3rem; font-weight: 800; color: #1a73e8; line-height: 1; margin: 10px 0; }
+        .pay-rate { font-size: 1.5rem; color: #188038; font-weight: bold; }
+        .details { font-size: 0.9rem; color: #555; margin-top: 5px; }
+
+        /* Settings (Marital) */
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
+        select, input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>🇺🇸 VA Rating Calculator</h1>
+    <div class="subtitle">Updated for 2026 Rates (2.8% COLA)</div>
+
+    <label class="step-label">1. Select Body Part</label>
+    <div class="grid-container" id="bodyPartGrid">
+        <button class="btn" onclick="selectPart('Left Arm/Upper', this)">Left Arm</button>
+        <button class="btn" onclick="selectPart('Right Arm/Upper', this)">Right Arm</button>
+        <button class="btn" onclick="selectPart('Left Leg/Lower', this)">Left Leg</button>
+        <button class="btn" onclick="selectPart('Right Leg/Lower', this)">Right Leg</button>
+        <button class="btn grid-full" onclick="selectPart('Other (Head/Torso/Organs)', this)">Other / Systemic</button>
+    </div>
+
+    <label class="step-label">2. Select Rating %</label>
+    <div class="percent-grid" id="percentGrid">
+        <button class="btn btn-percent" onclick="selectPercent(0, this)">0%</button>
+        <button class="btn btn-percent" onclick="selectPercent(10, this)">10%</button>
+        <button class="btn btn-percent" onclick="selectPercent(20, this)">20%</button>
+        <button class="btn btn-percent" onclick="selectPercent(30, this)">30%</button>
+        <button class="btn btn-percent" onclick="selectPercent(40, this)">40%</button>
+        <button class="btn btn-percent" onclick="selectPercent(50, this)">50%</button>
+        <button class="btn btn-percent" onclick="selectPercent(60, this)">60%</button>
+        <button class="btn btn-percent" onclick="selectPercent(70, this)">70%</button>
+        <button class="btn btn-percent" onclick="selectPercent(80, this)">80%</button>
+        <button class="btn btn-percent" onclick="selectPercent(90, this)">90%</button>
+        <button class="btn btn-percent" onclick="selectPercent(100, this)">100%</button>
+    </div>
+
+    <button id="addBtn" class="btn-add" onclick="addDisability()" disabled>+ Add Disability</button>
+
+    <div class="list-container" id="disabilityList" style="display:none;">
+        </div>
+
+    <div class="result-box">
+        <div class="details">Combined Rating</div>
+        <div class="big-rate" id="finalDisplay">0%</div>
+        <div class="pay-rate" id="payDisplay">$0.00</div>
+        <div class="details">Est. Monthly Pay (2026)</div>
+    </div>
+
+    <div class="settings-grid">
+        <div>
+            <label class="step-label">Marital Status</label>
+            <select id="maritalStatus" onchange="recalculate()">
+                <option value="single">Single</option>
+                <option value="spouse">Married</option>
+            </select>
+        </div>
+        <div>
+            <label class="step-label">Children (< 18)</label>
+            <input type="number" id="children" value="0" min="0" onchange="recalculate()">
+        </div>
+    </div>
+</div>
+
+<script>
+    // State Variables
+    let currentPart = null;
+    let currentPercent = null;
+    let disabilities = [];
+
+    // 2026 Pay Rates (Approx 2.8% COLA)
+    const rates = {
+        base: { 10: 180.42, 20: 356.66, 30: 552.47, 40: 795.84, 50: 1132.90, 60: 1435.02, 70: 1808.45, 80: 2102.15, 90: 2362.30, 100: 3938.58 },
+        spouse: { 30: 65, 40: 87, 50: 109, 60: 131, 70: 153, 80: 175, 90: 197, 100: 219.59 },
+        child: { 30: 44, 40: 58, 50: 73, 60: 88, 70: 102, 80: 117, 90: 132, 100: 146.85 }
+    };
+
+    // UI Logic
+    function selectPart(part, btn) {
+        currentPart = part;
+        // Reset all buttons in grid
+        document.querySelectorAll('#bodyPartGrid .btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        checkReady();
+    }
+
+    function selectPercent(pct, btn) {
+        currentPercent = pct;
+        document.querySelectorAll('#percentGrid .btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        checkReady();
+    }
+
+    function checkReady() {
+        const btn = document.getElementById('addBtn');
+        if (currentPart && currentPercent !== null) {
+            btn.disabled = false;
+            btn.innerText = `+ Add ${currentPercent}% (${currentPart.split(' ')[0]})`;
+        }
+    }
+
+    function addDisability() {
+        disabilities.push({ part: currentPart, value: currentPercent });
+        
+        // Reset UI
+        currentPart = null;
+        currentPercent = null;
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('selected'));
+        document.getElementById('addBtn').disabled = true;
+        document.getElementById('addBtn').innerText = "+ Add Disability";
+        
+        renderList();
+        recalculate();
+    }
+
+    function removeDisability(index) {
+        disabilities.splice(index, 1);
+        renderList();
+        recalculate();
+    }
+
+    function renderList() {
+        const list = document.getElementById('disabilityList');
+        if (disabilities.length === 0) {
+            list.style.display = 'none';
+            return;
+        }
+        list.style.display = 'block';
+        list.innerHTML = '';
+        disabilities.forEach((item, index) => {
+            list.innerHTML += `
+                <div class="list-item">
+                    <div><strong>${item.value}%</strong> - ${item.part}</div>
+                    <div class="delete-btn" onclick="removeDisability(${index})">&times;</div>
+                </div>
+            `;
+        });
+    }
+
+    // --- The Core Math ---
+    function vaCombine(numbers) {
+        if (numbers.length === 0) return 0;
+        let efficiency = 100;
+        numbers.sort((a,b) => b-a).forEach(n => {
+            let loss = efficiency * (n / 100);
+            efficiency -= loss;
+        });
+        return 100 - efficiency;
+    }
+
+    function recalculate() {
+        // Separate Bilateral vs Non-Bilateral
+        // Logic: If there is at least one LEFT and one RIGHT limb selected, all limbs get bilateral factor.
+        let lefts = disabilities.filter(d => d.part.includes('Left'));
+        let rights = disabilities.filter(d => d.part.includes('Right'));
+        let others = disabilities.filter(d => d.part.includes('Other'));
+
+        let finalRaw = 0;
+
+        // Check if Bilateral Factor applies
+        if (lefts.length > 0 && rights.length > 0) {
+            // Combine all limbs first
+            let allLimbs = [...lefts, ...rights].map(d => d.value);
+            let limbCombined = vaCombine(allLimbs);
+            
+            // Add 10% Bilateral Factor
+            let boosted = limbCombined + (limbCombined * 0.1);
+            
+            // Now combine boosted limbs with "others"
+            // Note: We have to convert boosted back to a "single rating" logic context
+            // The VA Math formula is recursive. We treat 'boosted' as the first big number.
+            let efficiency = 100 - boosted;
+            
+            others.map(d => d.value).sort((a,b) => b-a).forEach(rating => {
+                let loss = efficiency * (rating / 100);
+                efficiency -= loss;
+            });
+            finalRaw = 100 - efficiency;
+
+        } else {
+            // No bilateral factor, just combine everything straight
+            let allRatings = disabilities.map(d => d.value);
+            finalRaw = vaCombine(allRatings);
+        }
+
+        // Rounding
+        let rounded = Math.round(finalRaw / 10) * 10;
+        if (rounded > 100) rounded = 100;
+        
+        // Update Screen
+        document.getElementById('finalDisplay').innerText = rounded + "%";
+        
+        // Calc Pay
+        let pay = 0;
+        if (rounded >= 10) {
+            pay = rates.base[rounded] || 0;
+            if (rounded >= 30) {
+                const isMarried = document.getElementById('maritalStatus').value === 'spouse';
+                const kids = parseInt(document.getElementById('children').value);
+                
+                if (isMarried) pay += (rates.spouse[rounded] || 0);
+                if (kids > 0) pay += (kids * (rates.child[rounded] || 0));
+            }
+        }
+        
+        document.getElementById('payDisplay').innerText = "$" + pay.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+</script>
+
+</body>
+</html>
